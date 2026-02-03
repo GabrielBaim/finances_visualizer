@@ -33,8 +33,9 @@ status:
       1.4:
         title: Transaction Categorization Engine
         status: IN_PROGRESS
-        completedTasks: 0
+        completedTasks: 7
         totalTasks: 8
+        note: "39/41 tests passing - 2 minor test failures to fix"
       1.5:
         title: Data Aggregation and Summary
         status: PENDING
