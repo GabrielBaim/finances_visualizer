@@ -7,45 +7,52 @@ status:
     - hash: e58ef01
       message: docs: create all remaining stories for 30-day challenge
       date: 2026-02-03
-  currentEpic: 1
-  currentStory: 1.5
+  currentEpic: 2
+  currentStory: 2.1
   epic1:
-    status: IN_PROGRESS
-    progress: 80
+    status: COMPLETED
+    progress: 100
+    completedAt: '2026-02-03T21:40:00.000Z'
     stories:
       1.1:
         title: Project Scaffold and开发环境 Setup
         status: COMPLETED
         completedTasks: 7
         totalTasks: 7
+        completedAt: '2026-02-03T18:45:00.000Z'
       1.2:
         title: CSV Parser for Nubank Format
         status: COMPLETED
         completedTasks: 9
         totalTasks: 9
+        completedAt: '2026-02-03T19:07:00.000Z'
       1.3:
         title: CSV Parser for Inter Format
         status: COMPLETED
         completedTasks: 7
         totalTasks: 7
+        completedAt: '2026-02-03T19:07:00.000Z'
       1.4:
         title: Transaction Categorization Engine
         status: COMPLETED
         completedTasks: 8
         totalTasks: 8
+        completedAt: '2026-02-03T21:35:00.000Z'
       1.5:
         title: Data Aggregation and Summary
-        status: IN_PROGRESS
-        completedTasks: 0
+        status: COMPLETED
+        completedTasks: 8
         totalTasks: 8
+        completedAt: '2026-02-03T21:40:00.000Z'
   epic2:
-    status: BLOCKED
+    status: IN_PROGRESS
     progress: 0
     dependsOn: epic1
+    unblockedAt: '2026-02-03T21:40:00.000Z'
     stories:
       2.1:
         title: Dashboard Layout and Summary Cards
-        status: PENDING
+        status: IN_PROGRESS
         completedTasks: 0
         totalTasks: 9
       2.2:
@@ -54,7 +61,7 @@ status:
         completedTasks: 0
         totalTasks: 9
       2.3:
-        title: Cashflow Bar Chart
+        title: Cash Flow Bar Chart
         status: PENDING
         completedTasks: 0
         totalTasks: 8
@@ -113,7 +120,7 @@ status:
         status: PENDING
         completedTasks: 0
         totalTasks: 12
-  lastUpdate: '2026-02-03T19:20:00.000Z'
+  lastUpdate: '2026-02-03T21:40:00.000Z'
   isGitRepo: true
-timestamp: 1770153600000
+timestamp: 1770154800000
 ttl: 300
