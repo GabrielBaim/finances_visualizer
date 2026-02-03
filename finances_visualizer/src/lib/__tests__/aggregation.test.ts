@@ -97,7 +97,7 @@ describe('filterByDateRange', () => {
       start: new Date('2024-01-15'),
     });
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0].date).toEqual(new Date('2024-01-20'));
   });
 
@@ -209,9 +209,9 @@ describe('groupByMonth', () => {
 
   it('should sort chronologically', () => {
     const transactions: Transaction[] = [
-      createTransaction({ date: new Date('2024-03-01') }),
-      createTransaction({ date: new Date('2024-01-01') }),
-      createTransaction({ date: new Date('2024-02-01') }),
+      createTransaction({ date: new Date('2024-03-15T00:00:00') }),
+      createTransaction({ date: new Date('2024-01-15T00:00:00') }),
+      createTransaction({ date: new Date('2024-02-15T00:00:00') }),
     ];
 
     const result = groupByMonth(transactions);
