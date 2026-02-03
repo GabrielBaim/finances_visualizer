@@ -29,10 +29,11 @@ export function detectBankFormat(csvText: string): BankFormat {
 
   if (hasNubankColumns) return 'nubank'
 
-  // Check for Inter format (will be implemented in Story 1.3)
+  // Check for Inter format: Data, Descrição, Valor (or similar)
+  // Inter uses Portuguese column names and DD/MM/YYYY date format
   const hasInterColumns =
-    columns.includes('data') ||
-    columns.includes('descricao') ||
+    (columns.includes('data') || columns.includes('data')) &&
+    (columns.includes('descrição') || columns.includes('descricao') || columns.includes('descricao')) &&
     columns.includes('valor')
 
   if (hasInterColumns) return 'inter'
@@ -160,6 +161,146 @@ function parseNubankDate(dateStr: string): Date | null {
 }
 
 /**
+ * Parse Inter bank CSV export format
+ *
+ * Inter Format (example - may vary):
+ * - Date: DD/MM/YYYY (Brazilian format)
+ * - Amount: Negative for expenses, positive for income
+ * - Columns: Data, Descrição, Valor (may have additional columns)
+ *
+ * @param csvText - Raw CSV text from Inter export
+ * @param onProgress - Optional progress callback (percent: 0-100)
+ * @returns FileUploadResult with normalized Transaction[] compatible with rest of app
+ *
+ * @see parseNubankCSV() for Nubank format
+ */
+export function parseInterCSV(
+  csvText: string,
+  onProgress?: (percent: number) => void
+): FileUploadResult {
+  const transactions: Transaction[] = []
+  const errors: string[] = []
+  let skippedRows = 0
+  let totalRows = 0
+
+  Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: true,
+    encoding: 'UTF-8',
+    step: (row) => {
+      totalRows++
+      const data = row.data as CSVRow
+
+      try {
+        const transaction = parseInterRow(data)
+        if (transaction) {
+          transactions.push(transaction)
+        } else {
+          skippedRows++
+        }
+      } catch (error) {
+        skippedRows++
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        errors.push(`Row ${totalRows}: ${errorMsg}`)
+      }
+
+      // Report progress every 100 rows
+      if (onProgress && totalRows % 100 === 0) {
+        onProgress(Math.min(90, (totalRows / 5000) * 100))
+      }
+    },
+    complete: () => {
+      if (onProgress) onProgress(100)
+    },
+    error: (error: Error) => {
+      errors.push(`Parsing error: ${error.message}`)
+    },
+  })
+
+  return {
+    transactions,
+    errors,
+    skippedRows,
+    totalRows,
+  }
+}
+
+/**
+ * Parse a single Inter CSV row
+ *
+ * Inter format differences from Nubank:
+ * - Date: DD/MM/YYYY instead of YYYY-MM-DD
+ * - May use "Descrição" or "Descricao" (with/without accent)
+ * - Amount: Negative for expenses, positive for income
+ * - No separate 'tipo' column - determined by sign of amount
+ */
+function parseInterRow(row: CSVRow): Transaction | null {
+  // Inter may use various column names
+  const dateStr = row.data || row.Data
+  const description = row.descrição || row.descricao || row.Descricao || row.Descrição
+  const valor = row.valor || row.Valor
+
+  if (!dateStr || !description || valor === undefined) {
+    return null
+  }
+
+  // Parse date (DD/MM/YYYY format - Brazilian)
+  const date = parseInterDate(dateStr)
+  if (!date) {
+    throw new Error(`Invalid date format: ${dateStr}`)
+  }
+
+  // Parse amount - Inter uses negative for expenses
+  const rawAmount = parseFloat(String(valor).replace(',', '.').replace(/\./g, '').replace(',', '.'))
+  if (isNaN(rawAmount)) {
+    throw new Error(`Invalid amount: ${valor}`)
+  }
+
+  const amount = Math.abs(rawAmount)
+  const type = rawAmount >= 0 ? 'income' : 'expense'
+
+  return {
+    id: generateId(),
+    date,
+    description: description.trim(),
+    amount,
+    type,
+    source: 'inter',
+  }
+}
+
+/**
+ * Parse date from Inter format (DD/MM/YYYY)
+ * Handles Brazilian date format
+ */
+function parseInterDate(dateStr: string): Date | null {
+  // Handle DD/MM/YYYY format
+  const match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (match) {
+    const [, day, month, year] = match
+    const date = new Date(`${year}-${month}-${day}T00:00:00`)
+
+    if (!isNaN(date.getTime())) {
+      return date
+    }
+  }
+
+  // Also try YYYY-MM-DD as fallback (some Inter exports may use this)
+  const ymdMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (ymdMatch) {
+    const [, year, month, day] = ymdMatch
+    const date = new Date(`${year}-${month}-${day}T00:00:00`)
+
+    if (!isNaN(date.getTime())) {
+      return date
+    }
+  }
+
+  return null
+}
+
+/**
  * Validate a transaction object
  */
 export function validateTransaction(transaction: unknown): transaction is Transaction {
@@ -211,9 +352,11 @@ export function parseCSVFile(
         if (format === 'nubank') {
           const result = parseNubankCSV(csvText, onProgress)
           resolve(result)
+        } else if (format === 'inter') {
+          const result = parseInterCSV(csvText, onProgress)
+          resolve(result)
         } else {
-          // Inter format will be handled in Story 1.3
-          reject(new Error('Formato Inter será implementado na próxima história.'))
+          reject(new Error('Formato não suportado.'))
         }
       } catch (error) {
         reject(
