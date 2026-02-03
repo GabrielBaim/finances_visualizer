@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-02-03T17:37:00",
+  "project_name": "finances_visualizer",
+  "system": {
+    "os": "Linux (Pop!_OS)",
+    "architecture": "x86_64",
+    "user": "baimast",
+    "hostname": "pop-os"
+  },
+  "cli_tools": {
+    "git": {
+      "installed": true,
+      "version": "2.43.0"
+    },
+    "gh": {
+      "installed": true,
+      "version": "2.45.0",
+      "authenticated": true,
+      "username": "GabrielBaim"
+    },
+    "node": {
+      "installed": true,
+      "version": "24.13.0"
+    },
+    "npm": {
+      "installed": true,
+      "version": "11.6.2"
+    },
+    "supabase": {
+      "installed": true,
+      "version": "2.75.0",
+      "path": "~/.local/bin/supabase"
+    },
+    "railway": {
+      "installed": true,
+      "version": "4.28.0"
+    },
+    "docker": {
+      "installed": true,
+      "version": "29.2.1",
+      "running": true
+    },
+    "coderabbit": {
+      "installed": false,
+      "note": "Install script unavailable - manual setup required"
+    },
+    "pnpm": {
+      "installed": true,
+      "version": "10.28.2"
+    },
+    "bun": {
+      "installed": true,
+      "version": "1.3.8"
+    }
+  },
+  "repository": {
+    "initialized": true,
+    "remote_url": "https://github.com/GabrielBaim/finances_visualizer",
+    "branch": "master"
+  },
+  "validation": {
+    "essential_complete": true,
+    "recommended_complete": true,
+    "ready_for_development": true
+  }
+}

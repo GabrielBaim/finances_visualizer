@@ -1,0 +1,18 @@
+# AIOS Project Configuration
+version: 2.1.0
+project:
+  name: finances_visualizer
+  type: greenfield
+  created: "2026-02-03"
+
+environment:
+  bootstrapped: true
+  bootstrap_date: "2026-02-03T17:37:00"
+
+workflow:
+  current: greenfield-fullstack
+  phase: 0-bootstrap-complete
+
+settings:
+  auto_update_status: true
+  quality_gates_enabled: true
