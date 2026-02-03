@@ -8,107 +8,135 @@ import type { Category, CategorizationResult } from '@/types/category';
 /**
  * Keyword mappings for each category
  * Lowercase keywords for matching
+ * Order matters: more specific keywords first
  */
 const CATEGORY_KEYWORDS: Record<Category, string[]> = {
   Alimentação: [
-    // Food delivery
-    'uber eats', 'ifood', 'rappi', 'delivery',
-    'delivery',
+    // Food delivery (specific)
+    'uber eats', 'ifood', 'rappi',
     // Restaurants
     'restaurante', 'lanchonete', 'padaria', 'cafeteria',
     'burger', 'pizza', 'sushi',
-    // Groceries
-    'mercado', 'supermercado', 'carrefour', 'extra', 'wallmart',
-    'atta', 'dia', 'gleba', 'pão de açucar',
+    // Groceries (more specific first - excluding "mercado livre")
+    'carrefour', 'extra', 'atta', 'dia', 'gleba',
+    'supermercado',
+    // General grocery - after Compras checks
+    'mercado',
     // Convenience
-    'farmacia', 'drogaria', 'loja de conveniencia',
+    'loja de conveniencia',
   ],
 
   Transporte: [
     // Ride sharing
-    'uber', '99 taxi', 'cabify', 'taxi',
+    '99 taxi', 'cabify',
+    'uber', 'taxi',
     // Fuel
     'posto', 'gasolina', 'alcool', 'combustivel',
-    'shell', 'ipiranga', 'petrobras', 'br',
+    'shell', 'ipiranga', 'petrobras',
     // Parking
     'estacionamento', 'parking',
     // Transit
-    'onibus', 'bus', 'metro', 'trem', 'bilhete',
+    'onibus', 'metro', 'trem', 'bilhete',
   ],
 
   Moradia: [
     // Utilities
-    'luz', 'agua', 'esgoto', 'gas',
-    'energia', 'eletropaulo', 'sabesp',
+    'eletropaulo', 'sabesp',
+    'luz', 'agua', 'esgoto',
+    'energia', 'energia eletrica', 'conta de luz',
     // Rent
     'aluguel', 'condominio',
-    // Home services
-    'internet', 'net', 'vivo', 'claro', 'tim',
-    'netflix', 'spotify',
+    // Home services (internet/phone - not streaming)
+    'net fibra', 'vivo fibra', 'claro fibra', 'tim fibra',
     // Maintenance
     'reparo', 'manutencao', 'encanador', 'eletricista',
   ],
 
   Lazer: [
-    // Entertainment
+    // Entertainment venues
     'cinema', 'teatro', 'show', 'concerto',
-    // Hobbies
+    // Gaming
     'jogo', 'game', 'psn', 'xbox', 'steam',
-    'livraria', 'livro',
-    // Streaming
-    'netflix', 'prime video', 'disney', 'hbo',
-    'spotify', 'youtube premium',
-    // Sports
+    // Streaming (specific services)
+    'prime video', 'disney plus', 'hbo max', 'hbo',
+    'youtube premium',
+    // Sports/Fitness
     'academia', 'personal', 'crossfit',
   ],
 
   Saúde: [
-    // Medical
-    'hospital', 'clinica', 'medico', 'doutor',
+    // Medical facilities
+    'hospital', 'clinica', 'consultorio',
+    // Professionals
+    'medico', 'doutor',
+    // Services
     'exame', 'consulta',
-    // Pharmacy
-    'farmacia', 'drogaria', 'drogasil', 'raia',
+    // Pharmacies (specific chains)
+    'drogasil', 'droga raia', 'raia',
+    'farmacia', 'drogaria',
     // Insurance
     'plano de saude', 'unimed', 'bradesco saude',
     'amil', 'sulamerica',
   ],
 
   Educação: [
-    // Schools
-    'escola', 'faculdade', 'universidade', 'curso',
-    // Books
-    'livraria', 'livro', 'ebook',
+    // Institutions
+    'escola', 'faculdade', 'universidade',
     // Learning
-    'udemy', 'coursera', 'alura', 'rocketseat',
+    'curso online', 'udemy', 'coursera', 'alura', 'rocketseat',
+    // Books
+    'livraria cultura', 'livraria leitura',
   ],
 
   Compras: [
-    // Retail
-    'loja', 'shopping', 'magazine', 'mercado',
+    // Online marketplaces (specific first to avoid Alimentação overlap)
+    'mercado livre',
+    // Retail stores
+    'magazine luiza', 'magazine',
     // Online
-    'amazon', 'mercado livre', 'shopee', 'aliexpress',
-    // Specific stores
-    'zara', 'h&m', 'cenetenio', 'riachuelo',
+    'amazon', 'shopee', 'aliexpress',
+    // Clothing
+    'zara', 'h&m', 'centenario', 'riachuelo',
     'renner', 'c&a',
+    // General
+    'loja', 'shopping',
   ],
 
   Serviços: [
     // Subscriptions
     'assinatura', 'mensalidade',
-    // Financial services
+    // Financial
     'juros', 'tarifa', 'anuidade', 'iof',
-    // Professional services
+    // Professional
     'advogado', 'contador', 'consultoria',
   ],
 
   Transferências: [
-    'pix', 'transferencia', 'ted', 'doc',
-    'deposito', 'saque',
+    'pix transferencia', 'pix para',
+    'ted', 'doc',
+    'transferencia', 'deposito', 'saque',
   ],
 
   Outros: [
-    // Fallback - empty or will be used for unmatched
+    // Fallback - custom keywords added at runtime
   ],
+};
+
+/**
+ * Category priority for overlapping keywords
+ * Higher number = higher priority (checked first)
+ */
+const CATEGORY_PRIORITY: Record<Category, number> = {
+  Alimentação: 10,
+  Transporte: 9,
+  Saúde: 8,
+  Moradia: 7,
+  Lazer: 6,
+  Educação: 5,
+  Compras: 4,
+  Serviços: 3,
+  Transferências: 2,
+  Outros: 1,
 };
 
 /**
@@ -145,15 +173,19 @@ export function normalizeText(text: string): string {
 }
 
 /**
- * Calculate confidence score based on match type
+ * Calculate confidence score based on match type and keyword length
  */
-function calculateConfidence(matchType: 'exact' | 'partial' | 'none'): number {
+function calculateConfidence(matchType: 'exact' | 'partial' | 'none', keywordLength = 0): number {
   switch (matchType) {
     case 'exact':
       return 100;
-    case 'partial':
-      // 60-80% for partial match based on keyword length
-      return Math.floor(Math.random() * 20) + 60;
+    case 'partial': {
+      // 60-95% for partial match based on keyword length (longer = more confident)
+      const minConfidence = 60;
+      // Scale confidence by keyword length (max additional 35% for long keywords)
+      const lengthBonus = Math.min(keywordLength * 2, 35);
+      return minConfidence + lengthBonus;
+    }
     case 'none':
     default:
       return 0;
@@ -175,34 +207,68 @@ export function categorizeTransaction(description: string): CategorizationResult
 
   const normalized = normalizeText(description);
 
-  // First, try exact match (O(1) lookup)
-  for (const [category, keywordSet] of EXACT_MATCH_SETS.entries()) {
-    if (category === 'Outros') continue; // Skip Outros for matching
+  // Collect all matches with their priorities
+  interface Match {
+    category: Category;
+    type: 'exact' | 'partial';
+    keyword: string;
+    priority: number;
+  }
 
+  const matches: Match[] = [];
+
+  // Check exact matches (O(1) lookup)
+  for (const [category, keywordSet] of EXACT_MATCH_SETS.entries()) {
     if (keywordSet.has(normalized)) {
-      return {
+      matches.push({
         category,
-        confidence: 100,
-        matchedKeyword: description,
-        matchType: 'exact',
-      };
+        type: 'exact',
+        keyword: normalized,
+        priority: CATEGORY_PRIORITY[category],
+      });
     }
   }
 
-  // Second, try partial match
-  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (category === 'Outros') continue;
-
-    for (const keyword of keywords) {
-      if (normalized.includes(keyword) || keyword.includes(normalized)) {
-        return {
-          category: category as Category,
-          confidence: calculateConfidence('partial'),
-          matchedKeyword: keyword,
-          matchType: 'partial',
-        };
+  // If no exact match, check partial matches
+  if (matches.length === 0) {
+    for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      for (const keyword of keywords) {
+        if (normalized.includes(keyword)) {
+          matches.push({
+            category: category as Category,
+            type: 'partial',
+            keyword,
+            priority: CATEGORY_PRIORITY[category as Category],
+          });
+        }
       }
     }
+  }
+
+  // Sort by priority (highest first), then by type (exact > partial), then by keyword length (longer > shorter)
+  matches.sort((a, b) => {
+    // Exact matches always come first
+    if (a.type === 'exact' && b.type !== 'exact') return -1;
+    if (b.type === 'exact' && a.type !== 'exact') return 1;
+
+    // For same type, prioritize longer keywords (more specific matches)
+    if (a.keyword.length !== b.keyword.length) {
+      return b.keyword.length - a.keyword.length;
+    }
+
+    // Then by priority
+    return b.priority - a.priority;
+  });
+
+  // Return best match or fallback to Outros
+  if (matches.length > 0) {
+    const best = matches[0];
+    return {
+      category: best.category,
+      confidence: calculateConfidence(best.type, best.keyword.length),
+      matchedKeyword: best.keyword,
+      matchType: best.type,
+    };
   }
 
   // No match found

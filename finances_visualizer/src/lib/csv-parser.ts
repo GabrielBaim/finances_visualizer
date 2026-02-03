@@ -4,6 +4,7 @@ import type {
   CSVRow,
   FileUploadResult,
 } from '@/types/transaction'
+import { categorizeTransaction } from './categorization'
 
 /**
  * Bank format type
@@ -134,12 +135,16 @@ function parseNubankRow(row: CSVRow): Transaction | null {
   // Parse type from 'tipo' column
   const type = tipo.toLowerCase() === 'receita' ? 'income' : 'expense'
 
+  // Categorize the transaction
+  const categorizationResult = categorizeTransaction(description)
+
   return {
     id: generateId(),
     date,
     description: description.trim(),
     amount,
     type,
+    category: categorizationResult.category,
     source: 'nubank',
   }
 }
@@ -260,12 +265,16 @@ function parseInterRow(row: CSVRow): Transaction | null {
   const amount = Math.abs(rawAmount)
   const type = rawAmount >= 0 ? 'income' : 'expense'
 
+  // Categorize the transaction
+  const categorizationResult = categorizeTransaction(description)
+
   return {
     id: generateId(),
     date,
     description: description.trim(),
     amount,
     type,
+    category: categorizationResult.category,
     source: 'inter',
   }
 }

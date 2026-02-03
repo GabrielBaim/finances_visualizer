@@ -32,30 +32,6 @@ export function FileUpload({
     setIsDragging(false)
   }, [])
 
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragging(false)
-
-      const files = Array.from(e.dataTransfer.files)
-      if (files.length === 0) return
-
-      await processFile(files[0])
-    },
-    []
-  )
-
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files || files.length === 0) return
-
-      await processFile(files[0])
-    },
-    []
-  )
-
   const processFile = async (file: File) => {
     // Validate file
     const validation = validateCSVFile(file)
@@ -100,6 +76,30 @@ export function FileUpload({
       }
     }
   }
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragging(false)
+
+      const files = Array.from(e.dataTransfer.files)
+      if (files.length === 0) return
+
+      await processFile(files[0])
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files
+      if (!files || files.length === 0) return
+
+      await processFile(files[0])
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   const handleClick = () => {
     fileInputRef.current?.click()
